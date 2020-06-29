@@ -20,7 +20,7 @@ do
   echo "- CREATE RINEX	"${i}-${mnt_name}.${fdate: (-8):2}"o"
   /usr/local/bin/convbin ${ubx} -v 2.11 -r ubx -hm ${mnt_name} \
 			-f 2 -y R -y E -y J -y S -y C -y I      \
-			-od -os -oi -ot -ti 5 -tt 0 -ro -TADJ=1  \
+			-od -os -oi -ot -ti 30 -tt 0 -ro -TADJ=1  \
 			-ts ${fdate} 00:01:00  -te ${fdate} 23:59:00 \
 			-o ${i}-${mnt_name}.${fdate:(-8):2}o
   echo "- RINEX "${i}-${mnt_name}.${fdate: (-8):2}"o is build"
