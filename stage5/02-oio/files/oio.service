@@ -1,0 +1,15 @@
+[Unit]
+Description=OiO
+After=network.target
+
+[Service]
+ExecStart=node server.js
+WorkingDirectory=/home/pi/OceanIsOpen/systools
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target
+

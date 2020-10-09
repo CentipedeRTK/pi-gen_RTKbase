@@ -8,17 +8,17 @@
 # Documentation: http://cloudinit.readthedocs.io/en/0.7.9/index.html
 
 # Set your hostname here, the manage_etc_hosts will update the hosts file entries as well
-hostname: basegnss
+hostname: oio
 manage_etc_hosts: true
 
 # You could modify this for your own user information
 users:
-  - name: basegnss
-    gecos: "Raspbian Base GNSS"
+  - name: pi
+    gecos: "Raspbian OceanIsOpen"
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
     groups: users,video,input
-    plain_text_passwd: basegnss!
+    plain_text_passwd: oio
     lock_passwd: false
     ssh_pwauth: true
     chpasswd: { expire: false }
@@ -66,7 +66,7 @@ package_upgrade: false
 runcmd:
   # Pickup the hostname changes
   - 'systemctl restart avahi-daemon'
-  - 'cd /home/basegnss && ./first_boot.sh && rm ./first_boot.sh && systemctl start str2str_tcp'
+  - 'rfkill unblock all && sh /home/pi/oio_bd_init.sh'
 
 #  # Activate WiFi interface
 #  - 'ifup wlan0'
