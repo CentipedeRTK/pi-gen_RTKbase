@@ -25,3 +25,5 @@ sudo PRESERVE_CONTAINER=1 CONTINUE=1 CLEAN=1 ./build-docker.sh
 
 
 sudo docker run -it --privileged --volumes-from=pigen_work pi-gen /bin/bash
+
+rm -r pi-gen/work/2021-04-16-RTKBaseGNSS/stage3/

@@ -8,5 +8,5 @@ cd /home/${FIRST_USER_NAME}
 find ./ -type f -iname "*.sh" -exec chmod +x {} \;
 ./first_run.sh
 rm first_run.sh
-rm install.sh
+#rm install.sh
 EOF
