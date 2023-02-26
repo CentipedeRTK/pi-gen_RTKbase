@@ -1,3 +1,5 @@
+PI_GEN=pi-gen_RTKbase
+PI_GEN_REPO=https://github.com/jancelin/pi-gen_RTKbase/
 IMG_NAME=RTKBaseGNSS
 USE_QCOW2=1
 TARGET_HOSTNAME=basegnss
@@ -8,4 +10,3 @@ TIMEZONE_DEFAULT=Europe/Paris
 ENABLE_SSH=1
 DEPLOY_COMPRESSION=zip
 LOCALE_DEFAULT=en_DK.UTF-8
-PI_GEN_REPO=https://github.com/jancelin/pi-gen_RTKbase/
