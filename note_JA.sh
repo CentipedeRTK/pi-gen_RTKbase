@@ -28,6 +28,7 @@ PRESERVE_CONTAINER=1 CONTINUE=1 CLEAN=1 ./build-docker.sh
 
 docker run -it --privileged --volumes-from=pigen_work pi-gen /bin/bash
 
+##https://fr.linux-console.net/?p=1143#gsc.tab=0
 ##pour lancer la fabrication en tâche de fond:
 sudo apt-get install screen
 lancer le build et lancer screen pendant la fabrication appuyez simplement sur “Ctrl + a” immédiatement suivi de “d”
