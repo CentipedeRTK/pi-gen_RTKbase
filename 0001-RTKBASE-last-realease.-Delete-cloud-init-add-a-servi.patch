@@ -1,0 +1,207 @@
+From 18838223dc395cf5e548597e92762185a0bc4381 Mon Sep 17 00:00:00 2001
+From: jancelin <julien.ancelin@inra.fr>
+Date: Fri, 21 Jun 2024 11:32:08 +0000
+Subject: [PATCH] RTKBASE last-realease. Delete cloud-init, add a service
+ firstboot & make stage_rtkbase. raspbian bookworm release
+
+---
+ RUN.md                                        | 79 +++++++++++++++++++
+ .../00-release/files/partition_setup.sh       |  0
+ stage_rtkbase/00-rtkbase/01-run.sh            | 15 ++++
+ stage_rtkbase/00-rtkbase/files/first_run.sh   | 20 +++++
+ .../00-rtkbase/files/firstboot.service        | 14 ++++
+ stage_rtkbase/00-rtkbase/files/firstboot.sh   |  4 +
+ stage_rtkbase/EXPORT_IMAGE                    |  0
+ stage_rtkbase/prerun.sh                       |  5 ++
+ 8 files changed, 137 insertions(+)
+ create mode 100755 RUN.md
+ mode change 100644 => 100755 export-noobs/00-release/files/partition_setup.sh
+ create mode 100755 stage_rtkbase/00-rtkbase/01-run.sh
+ create mode 100755 stage_rtkbase/00-rtkbase/files/first_run.sh
+ create mode 100644 stage_rtkbase/00-rtkbase/files/firstboot.service
+ create mode 100755 stage_rtkbase/00-rtkbase/files/firstboot.sh
+ create mode 100644 stage_rtkbase/EXPORT_IMAGE
+ create mode 100755 stage_rtkbase/prerun.sh
+
+diff --git a/RUN.md b/RUN.md
+new file mode 100755
+index 0000000..8f702bb
+--- /dev/null
++++ b/RUN.md
+@@ -0,0 +1,79 @@
++# Build a RTKbase image for Raspberry Pi
++
++## Installing qemu-user-static
++
++```sudo apt-get install qemu-user-static```
++
++## clone and choose branch
++
++### Last release
++
++```
++git clone https://github.com/CentipedeRTK/pi-gen_RTKbase.git
++git checkout last-release
++```
++
++### Dev Branch
++
++```
++git clone https://github.com/CentipedeRTK/pi-gen_RTKbase.git
++git checkout dev
++```
++
++## make executable .sh
++
++```
++cd pi-gen_RTKbase
++sudo find ./ -type f -iname "*.sh" -exec chmod +x {} \;
++```
++
++## make a raspbery pi RTKbase img
++
++```
++docker rm -v pigen_work
++
++sudo PRESERVE_CONTAINER=1 CONTINUE=1 ./build-docker.sh
++
++```
++
++## debug & delete stage before rebuild
++
++```
++docker run -it --privileged --volumes-from=pigen_work pi-gen /bin/bash
++rm -r /pi-gen/work/RTKBaseGNSS/stage_rtkbase
++```
++
++
++## Lancer la fabrication en tâche de fond sur un serveur:
++
++* sudo apt-get install screen
++* lancer ```screen```
++* lancer le build ```sudo PRESERVE_CONTAINER=1 CONTINUE=1 ./build-docker.sh```
++* Pendant la fabrication appuyez simplement sur ```Ctrl + a``` immédiatement suivi de ```d``` pour se deconnecter de la console
++* connectez-vous de nouveau au terminal distant et tapez ```screen -r```
++
++> https://fr.linux-console.net/?p=1143#gsc.tab=0
++
++> http://kmdouglass.github.io/posts/create-a-custom-raspbian-image-with-pi-gen-part-1/
++
++
++--------------------------------
++
++other cmd:
++
++```
++touch ./stage5/SKIP ./stage6/SKIP /stage7/SKIP
++touch ./stage5/SKIP_IMAGES ./stage6/SKIP_IMAGES ./stage7/SKIP_IMAGES
++
++docker rm -v pigen_work
++
++.sudo ./build-docker.sh
++
++sudo CONTINUE=1 ./build-docker.sh
++
++sudo PRESERVE_CONTAINER=1 ./build-docker.sh
++
++sudo PRESERVE_CONTAINER=1 CONTINUE=1 ./build-docker.sh
++
++sudo PRESERVE_CONTAINER=1 CONTINUE=1 CLEAN=1 ./build-docker.sh
++```
+diff --git a/export-noobs/00-release/files/partition_setup.sh b/export-noobs/00-release/files/partition_setup.sh
+old mode 100644
+new mode 100755
+diff --git a/stage_rtkbase/00-rtkbase/01-run.sh b/stage_rtkbase/00-rtkbase/01-run.sh
+new file mode 100755
+index 0000000..61c22fd
+--- /dev/null
++++ b/stage_rtkbase/00-rtkbase/01-run.sh
+@@ -0,0 +1,15 @@
++#!/bin/bash -e
++
++install -m 644 files/first_run.sh ${ROOTFS_DIR}/home/${FIRST_USER_NAME}/
++install -m 644 files/firstboot.service ${ROOTFS_DIR}/lib/systemd/system/
++install -m 644 files/firstboot.sh ${ROOTFS_DIR}/boot/
++
++on_chroot << EOF
++cd /etc/systemd/system/multi-user.target.wants && ln -s /lib/systemd/system/firstboot.service
++cd /home/${FIRST_USER_NAME}
++find ./ -type f -iname "*.sh" -exec chmod +x {} \;
++./first_run.sh
++rm first_run.sh
++rm install.sh
++chmod +x /boot/firstboot.sh
++EOF
+diff --git a/stage_rtkbase/00-rtkbase/files/first_run.sh b/stage_rtkbase/00-rtkbase/files/first_run.sh
+new file mode 100755
+index 0000000..6e20b06
+--- /dev/null
++++ b/stage_rtkbase/00-rtkbase/files/first_run.sh
+@@ -0,0 +1,20 @@
++#!/bin/bash
++
++_user="${PWD##*/}"
++cd /home/$_user
++
++## install last release
++wget https://raw.githubusercontent.com/Stefal/rtkbase/master/tools/install.sh
++chmod +x install.sh
++sed -i 's/df \"$HOME\"/df \//g' /home/${_user}/install.sh
++./install.sh --user ${_user} --dependencies --rtklib --rtkbase-release --gpsd-chrony
++find ./ -type f -iname "*.sh" -exec chmod +x {} \;
++
++
++## install dev branch
++#wget https://raw.githubusercontent.com/Stefal/rtkbase/dev/tools/install.sh
++#chmod +x install.sh
++#sed -i 's/df \"$HOME\"/df \//g' /home/${_user}/install.sh
++#./install.sh --user ${_user} --dependencies --rtklib --rtkbase-repo dev --gpsd-chrony
++#find ./ -type f -iname "*.sh" -exec chmod +x {} \;
++
+diff --git a/stage_rtkbase/00-rtkbase/files/firstboot.service b/stage_rtkbase/00-rtkbase/files/firstboot.service
+new file mode 100644
+index 0000000..c79a330
+--- /dev/null
++++ b/stage_rtkbase/00-rtkbase/files/firstboot.service
+@@ -0,0 +1,14 @@
++[Unit]
++Description=FirstBoot
++After=network.target apt-daily.service apt-daily-upgrade.service
++Before=rc-local.service
++ConditionFileNotEmpty=/boot/firstboot.sh
++
++[Service]
++ExecStart=/boot/firstboot.sh
++ExecStartPost=/bin/mv /boot/firstboot.sh /boot/firstboot.sh.done
++Type=oneshot
++RemainAfterExit=no
++
++[Install]
++WantedBy=multi-user.target
+diff --git a/stage_rtkbase/00-rtkbase/files/firstboot.sh b/stage_rtkbase/00-rtkbase/files/firstboot.sh
+new file mode 100755
+index 0000000..d4a1490
+--- /dev/null
++++ b/stage_rtkbase/00-rtkbase/files/firstboot.sh
+@@ -0,0 +1,4 @@
++#!/bin/bash
++
++cd /home/basegnss/rtkbase/tools && \
++sudo ./install.sh --user basegnss --unit-files --detect-modem --detect-gnss --configure-gnss --start-services
+diff --git a/stage_rtkbase/EXPORT_IMAGE b/stage_rtkbase/EXPORT_IMAGE
+new file mode 100644
+index 0000000..e69de29
+diff --git a/stage_rtkbase/prerun.sh b/stage_rtkbase/prerun.sh
+new file mode 100755
+index 0000000..9acd13c
+--- /dev/null
++++ b/stage_rtkbase/prerun.sh
+@@ -0,0 +1,5 @@
++#!/bin/bash -e
++
++if [ ! -d "${ROOTFS_DIR}" ]; then
++	copy_previous
++fi
+-- 
+2.20.1
+
