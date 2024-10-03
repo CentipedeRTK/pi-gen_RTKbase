@@ -1,4 +1,4 @@
-IMG_NAME=RTKBase-2-6-0_bookworm_64-lite
+IMG_NAME=RTKBase-2-6-1_bookworm_64
 USE_QCOW2=1
 BASE_QCOW2_SIZE=7G
 TARGET_HOSTNAME=basegnss
@@ -13,4 +13,4 @@ DEPLOY_COMPRESSION=zip
 LOCALE_DEFAULT=fr_FR.UTF-8
 STAGE_LIST="stage0 stage1 stage2 stage_rtkbase"
 PI_GEN_REPO=https://github.com/CentipedeRTK/pi-gen_RTKbase/
-
+arm_64bit=1
